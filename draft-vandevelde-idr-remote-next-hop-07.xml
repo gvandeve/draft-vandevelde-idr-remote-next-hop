@@ -1,0 +1,747 @@
+<?xml version="1.0"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+<!-- One method to get references from the online citation libraries.
+     There has to be one entity for each item to be referenced. 
+     An alternate method (rfc include) is described in the references. -->
+<!ENTITY I-D.draft-mahalingam-dutt-dcops-vxlan SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-mahalingam-dutt-dcops-vxlan-02.xml">
+<!ENTITY I-D.draft-sridharan-virtualization-nvgre SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-sridharan-virtualization-nvgre-02.xml">
+<!ENTITY I-D.vepc SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-matsushima-stateless-uplane-vepc-01.xml">
+<!ENTITY I-D.draft-ietf-idr-error-handling SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-ietf-idr-error-handling-13.xml">
+<!ENTITY I-D.draft-yamaya-ipsecme-mpsa SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-yamaya-ipsecme-mpsa-04.xml">
+]>
+<?rfc comments="yes"?>
+<?rfc compact="no"?>
+<?rfc inline="yes"?>
+<?rfc sortrefs="yes"?>
+<?rfc subcompact="no"?>
+<?rfc symrefs="yes"?>
+<?rfc toc="yes"?>
+<?rfc tocdepth="5"?>
+<?rfc tocindent="yes"?>
+<?rfc tocompact="yes"?>
+
+<rfc category="std" docName="draft-vandevelde-idr-remote-next-hop-07"
+     ipr="trust200902">
+
+  <front>
+
+    <title abbrev="">BGP Remote-Next-Hop</title>
+
+    <author fullname="Gunter Van de Velde" initials="G."
+            surname="Van de Velde">
+      <organization>Cisco Systems</organization>
+      <address>
+        <postal>
+          <street>De Kleetlaan 6a</street>
+          <city>Diegem</city>
+          <country>Belgium</country>
+          <code>1831</code>
+        </postal>
+        <phone>+32 2704 5473</phone>
+        <email>gvandeve@cisco.com</email>
+      </address>
+    </author>
+
+    <author fullname="Keyur Patel" initials="K."
+            surname="Patel">
+      <organization>Cisco Systems</organization>
+      <address>
+        <postal>
+          <street>170 W. Tasman Drive</street>
+          <city>San Jose, CA 95124</city>
+          <country>USA</country>
+          <code>95134</code>
+        </postal>
+        <phone></phone>
+        <email>keyupate@cisco.com</email>
+      </address>
+    </author>
+
+    <author fullname="Dhananjaya Rao" initials="D."
+            surname="Rao">
+      <organization>Cisco Systems</organization>
+      <address>
+        <postal>
+          <street>170 W. Tasman Drive</street>
+          <city>San Jose, CA 95124</city>
+          <country>USA</country>
+          <code>95134</code>
+        </postal>
+        <phone></phone>
+        <email>dhrao@cisco.com</email>
+      </address>
+    </author>
+
+
+    <author fullname="Robert Raszuk" initials="R."
+            surname="Raszuk">
+      <organization>NTT MCL Inc.</organization>
+      <address>
+        <postal>
+          <street>101 S Ellsworth Avenue Suite 350</street>
+          <city>San Mateo, CA  94401</city>
+          <country>US</country>
+          <code></code>
+        </postal>
+        <phone></phone>
+        <email>robert@raszuk.net</email>
+      </address>
+    </author>
+
+    <author initials="R." surname="Bush" fullname="Randy Bush">
+      <organization>Internet Initiative Japan</organization>
+      <address>
+	<postal>
+	  <street>5147 Crystal Springs</street>
+	  <city>Bainbridge Island</city>
+	  <region>Washington</region>
+	  <code>98110</code>
+	  <country>US</country>
+	  </postal>
+	<email>randy@psg.com</email>
+	</address>
+      </author>
+
+    <date month="August" year="2014" />
+
+    <area>Routing</area>
+
+    <workgroup>IDR</workgroup>
+
+    <abstract>
+
+      <t>The BGP Remote-Next-Hop attribute is an optional transitive attribute intended
+        to facilitate automatic tunneling across an AS for an NLRI in a given address 
+        family.  The attribute carries one or more tunnel end-points and 
+        associated tunnel encapsulation information for a NLRI.  
+       </t>
+
+    </abstract>
+
+  </front>
+
+  <middle>
+
+    <section anchor="intro" title="Introduction">
+
+       <t><xref target="RFC5512"/> defines an attribute attached to an NLRI to signal 
+         tunnel end-point encapsulation information between two BGP speakers for a
+         single tunnel. <xref target="RFC5512"/> requires that a new address-family 
+         needs to be enabled between the two BGP speakers.  It also assumes that the exchanged 
+         tunnel endpoint is the NLRI.
+       </t>
+
+       <t>This document defines a new BGP transitive attribute known as a
+         Remote-Next-Hop BGP attribute for Intra-AS and Inter-AS usage, and 
+         simplifies the exchange and operations involved with tunnel end-point 
+         information propagation between two BGP speakers.
+       </t>
+
+       <t>The tunnel endpoint information and the tunnel encapsulation
+         information is carried within a Remote-Next-Hop BGP attribute.  This
+         attribute can be added to any BGP NLRI.  This way the Address Family
+         (AF) of the NLRI exchanged is decoupled from the tunnel SAFI address-
+         family defined in <xref target="RFC5512"/>. Multiple Remote-Next-Hop 
+         attribute TLVs can be added to a single NLRI.
+       </t>
+
+       <t>Security measures SHOULD be taken to protect against accidental or  
+         malicious tampering of the Remote-Next-Hop attribute. 
+       </t>
+
+       <t>The Encapsulation Network Layer Reachability Information (NLRI)
+         Format is not modified by this document.
+       </t>
+
+
+      </section>
+
+     <section title="Requirements Language">
+       <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+	 NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
+	 "OPTIONAL" are to be interpreted as described in
+	 <xref target="RFC2119"/> only when they appear in all upper
+	 case.  They may also appear in lower or mixed case as English
+	 words, without any normative meaning.</t>
+     </section>
+
+   <section title="Tunnel Encapsulation attribute versus BGP Remote-Next-Hop attribute ">
+
+       <t>The use of Tunnel Encapsulation attribute <xref target="RFC5512"/> is based on the
+         principle that the tunnel end-point is carried as part of BGP NLRI in
+         an Encapsulation SAFI.
+       </t>
+
+       <t>This requires enabling of the Encapsulation SAFI within a BGP 
+         enabled network. It also sets up an interdependency between BGP routes 
+         in different SAFIs and the BGP Tunnel SAFI for resolving tunnel next-hops. 
+       </t>
+
+       <t>While <xref target="RFC5512"/> allows multiple Tunnel Endpoints and multiple tunnel
+         types to be carried within a BGP Encaps SAFI, the correlation of
+         Tunnel information with other SAFIs is done using the color extended
+         community which is also non-trivial.
+       </t>
+
+       <t>There are an increasing number of use cases where the exchange of
+         multiple unique tunnel-endpoints is desired for a prefix using segments
+         of an existing infrastructure, where requiring a new address-family to be
+         enabled would add operational complexity.
+       </t>
+
+       <t>The BGP Remote-Next-Hop attribute is defined to be attached to each
+         originated BGP NLRI in any applicable address-family. Multiple
+         Remote-Next-Hop attribute TLVs can be applied to a single originated BGP
+         NLRI. Each TLV can contain one or more sub-TLVs that carry encapsulation
+         information. Thus, it enables a simple mechanism to signal multiple,
+         unique tunnel endpoints for a given prefix; as well as multiple
+         encapsulation parameters for prefixes with the same remote tunnel end-point.
+       </t>
+
+       <t>BGP Remote-Next-Hop attribute is a Transitive Optional BGP attribute,
+         allowing to signal next-hop encapsulation parameters in a transitive manner
+         without the requirement to enable a new address-family.
+       </t>
+
+       <t>The sub-TLVs from <xref target="RFC5512"/> and BGP IPsec tunnel encapsulation 
+         <xref target="RFC5566"/> are reused for the BGP Next-Hop-Attribute. This document 
+         specifies the tunnel types that can be used.
+       </t>
+
+
+       <t>The Encapsulation SAFI <xref target="RFC5512"/> assumes that the tunnel endpoint is
+         the NLRI exchanged, while Remote-Next-Hop decouples the exchanged
+         NLRI from the tunnel end-point information, thereby requiring mutual
+         exclusive usage of the two mechanisms.
+       </t>
+
+
+   </section>
+
+
+   <section title=" BGP Remote-Next-Hop attribute TLV Format">
+
+   <t>This attribute is an optional transitive attribute
+     <xref target="RFC1771"/>.</t>
+
+   <t>The BGP Remote-Next-Hop attribute is composed of a set of
+     Type-Length-Value (TLV) encodings. The type code of the attribute
+     is (IANA to assign). Each TLV contains information corresponding to
+     a particular tunnel end-point address. 
+   </t>
+
+   <t>
+   <figure>
+      <artwork>
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   Tunnel Type (2 Octets)    |              Length             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   | Addr len    |     Tunnel Address (IPv4 or IPv6)               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          AS Number                            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                   Tunnel Parameters                           |
+   ~                                                               ~
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+   Tunnel Type (2 octets): identifies the type of tunneling technology
+   being signaled.  This document specifies the following types:
+
+   - L2TPv3 over IP [RFC3931]: Tunnel Type = 1
+   - GRE [RFC2784]: Tunnel Type = 2
+   - Transmit tunnel endpoint [RFC5566]: Tunnel Type = 3
+   - IPsec in Tunnel-mode [RFC5566]: Tunnel Type = 4
+   - IP in IP tunnel 
+           with IPsec Transport Mode [RFC5566]: Tunnel Type = 5
+   - MPLS-in-IP tunnel 
+           with IPsec Transport Mode [RFC5566]: Tunnel Type = 6
+   - IP in IP [RFC2003] [RFC4213]: Tunnel Type = 7
+
+   This document defines the following types:
+   - VXLAN: Tunnel Type = 8
+   - NVGRE: Tunnel Type = 9
+   - GTP: Tunnel Type = 10
+   - MPLS-in-GRE: Tunnel Type = 11
+
+   Unknown types MUST be ignored and skipped upon receipt.
+
+   Length (2 octets): the total number of octets of the value field.
+
+   Tunnel Address Length - Addr len (1 octet): Length of Tunnel 
+   Address. Set to 4 bytes for an IPv4 address and 16 bytes for an
+   IPv6 address.
+
+   AS Number - The AS number originating the BGP Remote-Next-Hop 
+   attribute and is either a 2-byte AS or 4-Byte AS number
+
+   Tunnel Parameter - (variable): comprised of multiple sub-TLVs.  
+   Each sub-TLV consists of three fields: a 1-octet type, 1-octet 
+   length, and zero or more octets of value.
+      </artwork>
+   </figure>
+   </t>
+
+   </section>
+
+   <section title="Encapsulation sub-TLVs for virtual network overlays">
+
+   <t>A VN-ID may need to be signaled along with the encapsulation types 
+   for DC overlay encapsulations such as [VXLAN] and [NVGRE]. The VN-ID when 
+   present in the encapsulation sub-TLV for an overlay encapsulation, MUST be 
+   processed by a receiving device if it is capable of understanding it. The 
+   details regarding how such a signaled VN-ID is processed and used is 
+   defined in specifications such as [IPVPN-overlay] and [EVPN-overlay].
+   </t>
+
+   <section title="Encapsulation sub-TLV for VXLAN">
+     <t>
+       This document defines a new encapsulation sub-TLV format, defined in
+       <xref target="RFC5512"></xref>, for VXLAN tunnels. When the tunnel type
+       is VXLAN, the following is the structure of the value field in the
+       encapsulation sub-TLV:
+       </t>
+     <t>
+   <figure>
+      <artwork>
+
+   0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |V|M|R|R|R|R|R|R|          VN-ID (3 Octets)                   |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                 MAC Address (4 Octets)                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   
+    |  MAC Address (2 Octets)     |   Reserved                    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   
+
+
+    V: When set to 1, it indicates that a valid VN-ID is present in the 
+    encapsulation sub-TLV.
+    M: When set to 1, it indicates that a valid MAC Address is present 
+    in the encapsulation sub-TLV. 
+    R: The remaining bits in the 8-bit flags field are reserved for 
+    further use. They MUST be set to 0 on transmit and MUST be ignored 
+    on receipt.
+
+    VN-ID: Contains a 24-bit VN-ID value, if the 'V' flag bit is set.
+    If the 'V' flag is not set, it SHOULD be set to zero and MUST be 
+    ignored on receipt.
+
+    The VN-ID value is filled in the VNI field in the VXLAN packet 
+    header as defined in [VXLAN].
+
+    MAC Address: Contains an Ethernet MAC address if the 'M' flag bit 
+    is set. If the 'M' flag is not set, it SHOULD set to all zeroes and 
+    MUST be ignored on receipt.
+
+    The MAC address is local to the device advertising the route, and 
+    should be included as the destination MAC address in the inner 
+    Ethernet header immediately following the outer VXLAN header, in 
+    the packets destined to the advertiser.
+      </artwork>
+   </figure>
+     </t>
+   </section>
+
+   <section title="Encapsulation sub-TLV for NVGRE">
+     <t>
+       This document defines a new encapsulation sub-TLV format, defined in
+       <xref target="RFC5512"></xref>, for NVGRE tunnels.  When the tunnel type
+       is NVGRE, the following is the structure of the value field in the
+       encapsulation sub-TLV:
+     </t>
+
+     <t>
+   <figure>
+      <artwork>
+
+   0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |V|M|R|R|R|R|R|R|          VN-ID (3 Octets)                   |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                 MAC Address (4 Octets)                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   
+    |  MAC Address (2 Octets)     |   Reserved                    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+   
+
+    V: When set to 1, it indicates that a valid VN-ID is present in the 
+    encapsulation sub-TLV.
+    M: When set to 1, it indicates that a valid MAC Address is present 
+    in the encapsulation sub-TLV. 
+    R: The remaining bits in the 8-bit flags field are reserved for 
+    further use. They MUST be set to 0 on transmit and MUST be ignored 
+    on receipt.
+
+    VN-ID: Contains a 24-bit VN-ID value, if the 'V' flag bit is set.
+    If the 'V' flag is not set, it SHOULD be set to zero and MUST be 
+    ignored on receipt.
+
+    The VN-ID value is filled in the VSID field in the NVGRE packet 
+    header as defined in [NVGRE].
+
+    MAC Address: Contains an Ethernet MAC address if the 'M' flag bit is 
+    set. If the 'M' flag is not set, it SHOULD set to all zeroes and 
+    MUST be ignored on receipt.
+
+    The MAC address is local to the device advertising the route, and 
+    should be included as the destination MAC address in the inner 
+    Ethernet header immediately following the outer NVGRE header, in 
+    the packets destined to 
+    the advertiser.
+
+      </artwork>
+   </figure>
+     </t>
+   </section>
+
+<section title="Encapsulation sub-TLV for GTP">
+     <t>
+       This document defines a new encapsulation sub-TLV format, defined in
+       <xref target="RFC5512"></xref>, for GTP tunnels. When the tunnel type
+       is GTP, the following is the structure of the value field in the
+       encapsulation sub-TLV:
+       </t>
+     <t>
+   <figure>
+      <artwork>
+
+   0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    Local TEID (4 Octets)                    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+    |       Local Endpoint Address (4/16 Octets (IPv4/IPv6))      |
+    .                                                             .
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+
+
+    Local TEID: Contains a 32-bit Tunnel Endpoint Identifier of a 
+    GTP tunnel assigned by EPC that is used to distinguish different
+    connections in received packets within the tunnel.
+
+    Local Endpoint Address: Indicates a 4-octets IPv4 address or 
+    16-octets IPv6 address as a local endpoint address of GTP tunnel.
+
+    Local Endpoint Address element makes a tunnel endpoint router 
+    allow to have multiple Local TEID spaces. Received GTP packets 
+    are identified which tunnel connection by combination of Local 
+    Endpoint Address and Local TEID.
+    
+       </artwork>
+   </figure>
+     </t>
+   </section>
+
+<section title="Encapsulation for MPLS-in-GRE">
+     <t>
+       This document defines a new encapsulation sub-TLV format, defined in
+       <xref target="RFC5512"></xref>, for MPLS-in-GRE tunnels. When the tunnel type
+       is MPLS-in-GRE, the following is the structure of the value field in an optional
+       encapsulation sub-TLV:
+       </t>
+     <t>
+   <figure>
+      <artwork>
+
+   0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                     GRE-Key (4 Octets)                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+
+
+    GRE-Key: 4-octet field [RFC2890] that is generated by the 
+    advertising router.  The actual method by which the key is obtained
+    is beyond the scope of this document.  The key is inserted into the
+    GRE encapsulation header of the payload packets sent by ingress 
+    routers to the advertising router.  It is intended to be used for 
+    identifying extra context information about the received payload.
+    Note that the key is optional. Unless a key value is being 
+    advertised, the MPLS-in-GRE encapsulation sub-TLV MUST NOT be present.
+    
+       </artwork>
+   </figure>
+     </t>
+   </section>
+   </section>
+
+    <section title="Remote-Next-Hop Bestpath Considerations">
+
+      <t>Traditionally a BGP speaker uses the IGP cost towards the BGP 
+        Next-Hop as a BGP path selection criteria. However, when a BGP 
+        speaker is configured to utilise the BGP Remote-Next-Hop, then 
+        the IGP cost towards the Remote-Next-Hop SHOULD be utilised.
+      </t>
+
+   </section>
+
+    <section title="Securing Remote-Next-Hop">
+
+      <t>The Remote-Next-Hop attribute provides a set of tunnel parameters. 
+        It has value to make sure that this information can be trusted and 
+        that it is not leaked beyond its intended scope.
+      </t>
+
+     <section title="Restrictions on Announcing of Remote-Next-Hop Attribute">
+
+      <t>The Remote-Next-Hop attribute is used to carry an additional information 
+        (tunnel end-point, encapsulation type, etc). It has a security value 
+        to contain the distribution of the Remote-Next-Hop attribute within its
+        planned scope of distribution. This scope could be, but is not limited 
+        to, a particular department, site, organisation, across ASes within a 
+        same administration control or a global scope.
+      </t>
+
+      <t>To contain distribution of the Remote-Next-Hop attribute beyond its 
+        intended scope of applicability, attribute filtering MAY be deployed. 
+        The BGP speaker communicating to a speaker beyond the intended scope 
+        of the Remote-Next-Hop attribute SHOULD filter the attribute during 
+        the route announcements. 
+      </t>
+
+      <t>To facilitate attribute filtering, an implementation that supports 
+        the BGP Remote-Next-Hop attribute MUST support a policy to (1) ignore 
+        the received attribute and (2) filter the attribute.
+      </t>
+
+    </section>
+
+    <section title="Restrictions on Originating of Remote-Next-Hop Attribute">
+
+      <t>A bgp Remote-Next-Hop attribute may be added to routes that belong to 
+        same Autonomous system as the tunnel endpoint address. Implementations 
+        should validate the following to ensure the validity of Remote-Next-Hop Attribute:
+      </t>
+
+        <t>(1) BGP Remote-Next-Hops Tunnel Endpoint and AS number association using BGP
+          Origin Validation.
+        </t>
+
+        <t>(2) BGP Remote-Next-Hop Tunnel Endpoints underlay routes origin AS MUST 
+          be same as the AS number carried within BGP Remote-Next-Hop attribute.
+        </t>
+
+        <t>(3) BGP Routes that carry BGP Remote-Next-Hop attributes origin AS MUST 
+          be same as the AS number carried within BGP Remote-Next-Hop attribute.
+        </t>
+
+
+   </section>
+   </section>
+
+    <section title="Attribute error handling">
+
+      <t>When receiving a BGP Update message containing a malformed Remote-Next-Hop 
+        attribute, the attribute MUST be quietly ignored and not passed along to 
+        other BGP peers. (see [draft-ietf-idr-error-handling], Section 7).  This is equivalent to the 
+        -attribute discard- action specified in [draft-ietf-idr-error-handling].
+      </t>
+
+      <t>Note that a BGP Remote-Next-Hop attribute MUST NOT be considered to 
+        be malformed because it contains more than one TLV of a given type 
+        or because it contains TLVs of unknown types.
+      </t>
+
+      <t>If a BGP path attribute is received that has the Remote-Next-Hop 
+        attribute codepoint but does not have the transitive bit set, the 
+        attribute MUST be considered to be a malformed Remote-Next-Hop 
+        attribute and MUST be discarded as specified in this section.
+      </t>
+
+   </section>
+
+    <section title="BGP speakers that do not support BGP Remote-Next-Hop attribute">
+
+      <t>If a device does not support this attribute, and receives this
+        attribute, then normal NLRI BGP best path selection and resulting 
+        forwarding is used as the attribute is optional and transitive.
+      </t>
+
+   </section>
+
+    <section title="Use Case scenarios">
+      <t>This section provides a short overview of some use-cases for
+	 the BGP Remote-Next-Hop attribute.  Use of the BGP
+	 Remote-Next-Hop is not limited to the examples in this section.
+      </t>
+
+      <section title="Stateless user-plane architecture for virtualized EPC (vEPC)">
+      <t>The full usage case of BGP remote-next-hop regarding vEPC can 
+        be found in [vEPC], while [RFC6459] documents IPv6 in 3GPP EPS.
+      </t>
+	
+      <t>3GPP introduces Evolved Packet Core (EPC) that is fully IP based
+        mobile system for LTE and -advanced in their Release-8 specification
+        and beyond.  Operators are now deploying EPC for LTE services and
+        encounter rapid LTE traffic growth.  There are various activities to
+        offload mobile traffic in 3GPP and IETF such as LIPA, SIPTO and DMM.
+        The concept is similar that traffic of OTT (Over The Top) application
+        is offloaded at entity that is closer to the mobile node (ex. eNodeB
+        or closer anchor).
+       </t>
+
+        </section>
+
+
+
+      <section title="Stateless User-plane Architecture for virtual Packet Edge">
+
+	<t>With the emergence of the NfV technologies, different architectures are 
+         proposed for virtualised Services. These functions will normally run in the datacenter.
+         
+         BGP remote-next-hop can be used to inject traffic into the virtualised services 
+         running in the datacenter using tunnels. These tunnels can be signalled using BGP remote-next-hop. 
+         This facilitates a dynamic, simple and clean routing architecture.
+         BGP Remote Next Hop can simplify the orchestration or provisioning layer by signalling the 
+         tunnel endpoint (virtual provider edge router) in combination with the encapsulation protocol. 
+        </t>
+
+         <t>If this is used together with orchestrated traffic steering mechnisms 
+         (i.e. BGP Flowspec) , it is possible to differentiate at application level, and forward 
+         each different traffic types towards the desired destination.
+	</t>
+
+       </section>
+
+
+      <section title="Dynamic Network Overlay Infrastructure">
+
+	<t>The BGP Remote-Next-Hop extension allows signaling tunnel 
+           encapsulations needed to build and dynamically create an 
+           overlay tunneled network with traffic isolation and 
+           virtual private networks.
+	</t>
+       </section>
+
+      <section title="Simple VPN solution using Multi-point Security Association">
+	<t>[draft-yamaya-ipsecme-mpsa] describes the overlay network solution by utilizing 
+          dynamically established IPsec multi-point Security Association (SA) without 
+          individual connection.
+        </t>
+
+        <t>Multi-point SA technology provides the simplified mechanism of the
+          Auto Discovery and Configuration function.  This is applicable for
+          any IPsec tunnels such as IPv4 over IPv4, IPv4 over IPv6, IPv6 over
+          IPv4 and IPv6 over IPv6.
+        </t>
+
+        <t>MPSA does not provide peer discovery function by itself. However,
+          other mechanism, such as BGP, can be employed with MPSA for
+          automatic peer discovery. BGP Remote-Next-Hop can be used to learn 
+          peer information as next-hops.
+       </t>
+       </section>
+
+    </section>
+
+    <section title="BGP Remote-Next-Hop Community">
+
+     <t>place-holder for an BGP extension to signal valid prefixes
+     allowed to be considered as tunnel end-points. To be completed.
+     </t>
+
+    </section>
+
+  <section anchor="IANA" title="IANA Considerations">
+
+      <t>This document defines a new BGP attribute known as a BGP Remote-Next-
+        Hop attribute.  We request IANA to allocate a new attribute code from
+        the -BGP Path Attributes- registry with a symbolic name -Remote-Next-
+        Hop- attribute.
+      </t>
+
+      <t>We also request IANA to allocate four new BGP Tunnel Types from the
+        -BGP Tunnel Encapsulation Attribute Tunnel Types- registry with the
+        following symbolic names: -VXLAN- with Tunnel type 8, -NVGRE- with
+        Tunnel type 9, -GTP- with Tunnel type 10, and -MPLS-in-GRE with
+        Tunnel type 11.
+      </t>
+
+  </section>
+
+  <section anchor="Security" title="Security Considerations">
+    <t>This technology could be used as technology as man in the middle
+       attack, however with existing RPKI validation for BGP that risk
+       is reduced.</t>
+
+    <t>The distribution of Tunnel end-point address information can
+       result in potential DoS attacks. Therefore is it strongly recommended to
+       install traffic filters, IDSs and IPSs at the perimeter of the
+       tunneled network infrastructure.
+    </t>
+
+    <t>measures SHOULD be taken to Protect the validity of the BGP 
+       Remote-Next-Hop attribute. It is possible to inject a rogue 
+       BGP Remote-Next-Hop attribute to an NLRI resulting in Monkey-In-The-Middle 
+       attack (MITM).  To avoid this type of MITM attack, it is strongly recommended to
+	  use a technology mechanism to verify that for NLRI it is the
+	  expected BGP Remote-Next-Hop. We anticipate that this can be
+	  done with an expansion of RPKI-Based origin validation, see
+	  <xref target="I-D.ietf-sidr-pfx-validate"/>.
+       </t>
+
+       <t>This does not avoid the fact that rogue AS numbers may be
+	  inserted or injected into the AS-Path. To achieve protection
+	  against that threat BGP Path Validation should be used, see
+	  <xref target="I-D.ietf-sidr-bgpsec-overview"/>.
+       </t>
+
+
+  </section>
+
+    <section anchor="Privacy" title="Privacy Considerations">
+      <t>This proposal may introduce privacy issues, however with BGP 
+	 security mechanisms in place they should be prevented.</t>
+    </section>
+
+    <section anchor="Acknowledgements" title="Acknowledgements">
+      <t>The authors would like to thanks Satoru Matsushima, Ryuji Wakikawa and Miya Kohno for their      
+      usefull vEPC discussions. Istvan Kakonyi provided insight in the vPE use case scenario.</t>
+
+      <t>Satoshi Usui provided datapoints around Simple VPN solution using Multi-point Security Association.</t>
+    </section>
+
+    <section anchor="log" title="Change Log">
+      <t><list style="hanging">
+          <t hangText="Initial Version:">16 May 2012</t>
+	  <t hangText="Hacked for -01:">17 July 2012</t>
+	  <t hangText="Hacked for -05:">07 January 2014</t>
+	  <t hangText="Hacked for -07:">20 August 2014</t>
+        </list></t>
+    </section>
+
+  </middle>
+
+  <back>
+
+    <references title="Normative References">
+      <?rfc include="reference.RFC.1771"?>
+      <?rfc include="reference.RFC.2119"?>
+      <?rfc include="reference.RFC.2784" ?>
+      <?rfc include="reference.RFC.3484" ?>
+      <?rfc include="reference.RFC.3931" ?>
+      <?rfc include="reference.RFC.4213" ?>
+      <?rfc include="reference.RFC.4271" ?>
+      <?rfc include="reference.RFC.5512" ?>
+      <?rfc include="reference.RFC.5566" ?>
+      <?rfc include="reference.RFC.6459" ?>
+    </references>
+
+    <references title="Informative References">
+    <?rfc include="reference.I-D.ietf-sidr-bgpsec-overview"?>
+    <?rfc include="reference.I-D.ietf-sidr-pfx-validate"?>
+      &I-D.draft-mahalingam-dutt-dcops-vxlan;
+      &I-D.draft-sridharan-virtualization-nvgre;
+      &I-D.vepc;
+      &I-D.draft-ietf-idr-error-handling;
+      &I-D.draft-yamaya-ipsecme-mpsa;
+
+    </references>
+
+  </back>
+
+</rfc>
