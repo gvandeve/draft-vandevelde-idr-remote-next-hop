@@ -640,9 +640,24 @@
 
     <section title="BGP Remote-Next-Hop Community">
 
-     <t>place-holder for an BGP extension to signal valid prefixes
-     allowed to be considered as tunnel end-points. To be completed.
-     </t>
+       <t>This document defines a new BGP Extended Community 
+          called "BGP Remote-Next-Hop Extended Community".
+       </t>
+     
+       <t>The BGP Remote-Next-Hop extended community is transitive 
+	  across AS boundaries [RFC4360]
+       </t>
+	
+       <t>The Global Administrator field of this Community MUST be 
+          set to the ASN of the PE originating this community. 
+          The Local Administrator field of this Community MUST 
+	  be set to 0.
+        </t>
+	 
+	 <t>The Remote-Next-Hop extended community SHOULD be 
+	   attached to those BGP routes which are used to resolve 
+	   the Tunnel endpoints carried in BGP Remote-Next-Hop attribute.
+	 </t>
 
     </section>
 
