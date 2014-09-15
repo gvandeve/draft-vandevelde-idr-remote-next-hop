@@ -3,11 +3,12 @@
 <!-- One method to get references from the online citation libraries.
      There has to be one entity for each item to be referenced. 
      An alternate method (rfc include) is described in the references. -->
-<!ENTITY I-D.draft-mahalingam-dutt-dcops-vxlan SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-mahalingam-dutt-dcops-vxlan-02.xml">
-<!ENTITY I-D.draft-sridharan-virtualization-nvgre SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-sridharan-virtualization-nvgre-02.xml">
+<!ENTITY I-D.draft-sridharan-virtualization-nvgre SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-sridharan-virtualization-nvgre-05.xml">
 <!ENTITY I-D.vepc SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-matsushima-stateless-uplane-vepc-01.xml">
 <!ENTITY I-D.draft-ietf-idr-error-handling SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-ietf-idr-error-handling-13.xml">
 <!ENTITY I-D.draft-yamaya-ipsecme-mpsa SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-yamaya-ipsecme-mpsa-04.xml">
+<!ENTITY I-D.IPVPN-overlay SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-drao-bgp-l3vpn-virtual-network-overlays-03.xml">
+<!ENTITY I-D.EVPN-overlay SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-sd-l2vpn-evpn-overlay-03.xml">
 ]>
 <?rfc comments="yes"?>
 <?rfc compact="no"?>
@@ -102,7 +103,7 @@
 	</address>
       </author>
 
-    <date month="August" year="2014" />
+    <date month="September" year="2014" />
 
     <area>Routing</area>
 
@@ -147,10 +148,6 @@
 
        <t>Security measures SHOULD be taken to protect against accidental or  
          malicious tampering of the Remote-Next-Hop attribute. 
-       </t>
-
-       <t>The Encapsulation Network Layer Reachability Information (NLRI)
-         Format is not modified by this document.
        </t>
 
 
@@ -205,12 +202,12 @@
 
        <t>The sub-TLVs from <xref target="RFC5512"/> and BGP IPsec tunnel encapsulation 
          <xref target="RFC5566"/> are reused for the BGP Next-Hop-Attribute. This document 
-         specifies the tunnel types that can be used.
+         specifies the tunnel types that can be used with this attribute.
        </t>
 
 
        <t>The Encapsulation SAFI <xref target="RFC5512"/> assumes that the tunnel endpoint is
-         the NLRI exchanged, while Remote-Next-Hop decouples the exchanged
+         the NLRI exchanged in the Encaps SAFI, while Remote-Next-Hop decouples the exchanged
          NLRI from the tunnel end-point information, thereby requiring mutual
          exclusive usage of the two mechanisms.
        </t>
@@ -471,10 +468,13 @@
 
     <section title="Remote-Next-Hop Bestpath Considerations">
 
-      <t>Traditionally a BGP speaker uses the IGP cost towards the BGP 
-        Next-Hop as a BGP path selection criteria. However, when a BGP 
-        speaker is configured to utilise the BGP Remote-Next-Hop, then 
-        the IGP cost towards the Remote-Next-Hop SHOULD be utilised.
+      <t>Traditionally a BGP speaker uses the IGP cost towards the BGP Next-
+	     Hop as a BGP path selection criteria.  However, when a BGP speaker is
+	     configured to use the BGP Remote-Next-Hop value, then it SHOULD use
+		 the IGP cost towards the IP address selected from the Remote-Next-Hop
+		 attribute. Similarly, the speaker SHOULD also check that the IP
+		 address is reachable before considering that path eligible for
+		 bestpath.
       </t>
 
    </section>
@@ -492,7 +492,7 @@
         (tunnel end-point, encapsulation type, etc). It has a security value 
         to contain the distribution of the Remote-Next-Hop attribute within its
         planned scope of distribution. This scope could be, but is not limited 
-        to, a particular department, site, organisation, across ASes within a 
+        to, a particular department, site, organization, across ASes within a 
         same administration control or a global scope.
       </t>
 
@@ -512,7 +512,7 @@
 
     <section title="Restrictions on Originating of Remote-Next-Hop Attribute">
 
-      <t>A bgp Remote-Next-Hop attribute may be added to routes that belong to 
+      <t>A BGP Remote-Next-Hop attribute may be added to routes that belong to 
         same Autonomous system as the tunnel endpoint address. Implementations 
         should validate the following to ensure the validity of Remote-Next-Hop Attribute:
       </t>
@@ -527,12 +527,37 @@
 
         <t>(3) BGP Routes that carry BGP Remote-Next-Hop attributes origin AS MUST 
           be same as the AS number carried within BGP Remote-Next-Hop attribute.
-        </t>
+        
+		</t>
+		
+		<t>(4) A BGP speaker that advertises routes to its peers with its local
+		  address as the BGP next-hop may add the Remote-Next-Hop attribute to
+		  the routes if it desires to signal a tunnel encapsulation for its
+		  peers to use while sending traffic to the speaker for those routes.
+		</t>
 
 
    </section>
    </section>
 
+      <section title="Multiple tunnel endpoint addresses">
+
+      <t>In some cases, a device may need to accept incoming traffic for a	
+ 	   prefix via multiple different encapsulations, to support interactions	
+ 	   with remote devices with disjoint capabilities. Certain device	
+ 	   implementations cannot support the use of the same IP address as	
+ 	   local tunnel endpoint for multiple encapsulations.
+      </t>
+	  
+ 	  <t>	
+ 	   In certain cases, a device may need to signal an additional,	
+ 	   alternate tunnel endpoint address, to be used by other devices only	
+ 	   as a backup in certain failure conditions.
+	  </t>
+
+
+   </section>
+   
     <section title="Attribute error handling">
 
       <t>When receiving a BGP Update message containing a malformed Remote-Next-Hop 
@@ -557,21 +582,24 @@
     <section title="BGP speakers that do not support BGP Remote-Next-Hop attribute">
 
       <t>If a device does not support this attribute, and receives this
-        attribute, then normal NLRI BGP best path selection and resulting 
-        forwarding is used as the attribute is optional and transitive.
+	    attribute, then it follows the normal NLRI processing and BGP best
+		path selection, and the resulting forwarding decision is used, as the
+		attribute is optional.
       </t>
 
    </section>
 
     <section title="Use Case scenarios">
-      <t>This section provides a short overview of some use-cases for
-	 the BGP Remote-Next-Hop attribute.  Use of the BGP
-	 Remote-Next-Hop is not limited to the examples in this section.
+      <t>This section provides a brief overview of some use-cases for the BGP
+	    Remote-Next-Hop attribute.  Use of the BGP Remote-Next-Hop is not
+		limited to the examples in this section. Details regarding how the
+		attribute is used are described in the respective solution drafts
+		that are referenced where necessary.
       </t>
 
       <section title="Stateless user-plane architecture for virtualized EPC (vEPC)">
-      <t>The full usage case of BGP remote-next-hop regarding vEPC can 
-        be found in [vEPC], while [RFC6459] documents IPv6 in 3GPP EPS.
+      <t>The full usage case of BGP Remote-Next-Hop regarding vEPC can be 
+        found in [vEPC], while [RFC6459] documents IPv6 in 3GPP EPS.
       </t>
 	
       <t>3GPP introduces Evolved Packet Core (EPC) that is fully IP based
@@ -610,10 +638,9 @@
 
       <section title="Dynamic Network Overlay Infrastructure">
 
-	<t>The BGP Remote-Next-Hop extension allows signaling tunnel 
-           encapsulations needed to build and dynamically create an 
-           overlay tunneled network with traffic isolation and 
-           virtual private networks.
+	<t>The BGP Remote-Next-Hop extension allows consistent signalling of
+	  tunnel encapsulations as needed by virtual network overlay solutions
+	  such as <xref target="I-D.drao-bgp-l3vpn-virtual-network-overlays"/> and <xref target="I-D.sd-l2vpn-evpn-overlay"/>
 	</t>
        </section>
 
@@ -725,7 +752,7 @@
           <t hangText="Initial Version:">16 May 2012</t>
 	  <t hangText="Hacked for -01:">17 July 2012</t>
 	  <t hangText="Hacked for -05:">07 January 2014</t>
-	  <t hangText="Hacked for -07:">20 August 2014</t>
+	  <t hangText="Hacked for -07:">15 September 2014</t>
         </list></t>
     </section>
 
@@ -744,16 +771,19 @@
       <?rfc include="reference.RFC.5512" ?>
       <?rfc include="reference.RFC.5566" ?>
       <?rfc include="reference.RFC.6459" ?>
+	  <?rfc include="reference.RFC.7348" ?>
     </references>
 
     <references title="Informative References">
     <?rfc include="reference.I-D.ietf-sidr-bgpsec-overview"?>
     <?rfc include="reference.I-D.ietf-sidr-pfx-validate"?>
-      &I-D.draft-mahalingam-dutt-dcops-vxlan;
       &I-D.draft-sridharan-virtualization-nvgre;
       &I-D.vepc;
       &I-D.draft-ietf-idr-error-handling;
       &I-D.draft-yamaya-ipsecme-mpsa;
+	  &I-D.IPVPN-overlay;
+	  &I-D.EVPN-overlay;
+	  
 
     </references>
 
