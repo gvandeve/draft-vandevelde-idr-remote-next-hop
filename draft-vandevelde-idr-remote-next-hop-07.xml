@@ -163,7 +163,7 @@
 	 words, without any normative meaning.</t>
      </section>
 
-   <section title="Tunnel Encapsulation attribute versus BGP Remote-Next-Hop attribute ">
+   <section title="Remote-Next-Hop Attribute">
 
        <t>There are an increasing number of use cases where the exchange of
 	   multiple unique tunnel endpoints and associated tunnel data is 
@@ -190,28 +190,29 @@
          <xref target="RFC5566"/> are reused for the BGP Next-Hop-Attribute. 
        </t>
 
-       <t>The use of Tunnel Encapsulation attribute <xref target="RFC5512"/> is based on the
-         principle that the tunnel end-point is carried as part of BGP NLRI in
-         an Encapsulation SAFI.
-       </t>
+	     <section title="Tunnel Encapsulation attribute versus BGP Remote-Next-Hop attribute ">
+             <t>The use of Tunnel Encapsulation attribute <xref target="RFC5512"/> is based on the
+             principle that the tunnel end-point is carried as part of BGP NLRI in
+             an Encapsulation SAFI.
+             </t>
 
-       <t>This requires enabling of the Encapsulation SAFI within a BGP 
-         enabled network. It also sets up an interdependency between BGP routes 
-         in different SAFIs and the BGP Tunnel SAFI for resolving tunnel next-hops. 
-       </t>
+             <t>This requires enabling of the Encapsulation SAFI within a BGP 
+             enabled network. It also sets up an interdependency between BGP routes 
+             in different SAFIs and the BGP Tunnel SAFI for resolving tunnel next-hops. 
+             </t>
 
-       <t>The Encapsulation SAFI <xref target="RFC5512"/> assumes that the tunnel endpoint is
-         the NLRI exchanged in the Encaps SAFI, while Remote-Next-Hop decouples the exchanged
-         NLRI from the tunnel end-point information, thereby requiring mutual
-         exclusive usage of the two mechanisms.
-       </t>
+             <t>The Encapsulation SAFI <xref target="RFC5512"/> assumes that the tunnel endpoint is
+             the NLRI exchanged in the Encaps SAFI, while Remote-Next-Hop decouples the exchanged
+             NLRI from the tunnel end-point information, thereby requiring mutual
+             exclusive usage of the two mechanisms.
+             </t>
 
-       <t>While <xref target="RFC5512"/> allows multiple tunnel endpoints and multiple tunnel
-         types to be carried within a BGP Encaps SAFI, the correlation of
-         Tunnel information with other SAFIs is done using the color extended
-         community which is also non-trivial.
-       </t>
-
+             <t>While <xref target="RFC5512"/> allows multiple tunnel endpoints and multiple tunnel
+             types to be carried within a BGP Encaps SAFI, the correlation of
+             Tunnel information with other SAFIs is done using the color extended
+             community which is also non-trivial.
+             </t>
+         </section>
    </section>
 
 
@@ -222,8 +223,8 @@
 
    <t>The BGP Remote-Next-Hop attribute is composed of a set of
      Type-Length-Value (TLV) encodings. The type code of the attribute
-     is (IANA to assign). Each TLV contains information corresponding to
-     a particular tunnel end-point address. 
+     is (IANA to assign). Each TLV contains information corresponding 
+	 to a particular tunnel end-point address. 
    </t>
 
    <t>
@@ -459,15 +460,15 @@
     routers to the advertising router.  It is intended to be used for 
     identifying extra context information about the received payload.
     Note that the key is optional. Unless a key value is being 
-    advertised, the MPLS-in-GRE encapsulation sub-TLV MUST NOT be present.
+    advertised, the MPLS-in-GRE encapsulation sub-TLV MUST NOT be
+	present.
 	
 	Note that signaling a GRE tunnel-type with routes in a labeled SAFI	
 	may be sufficient to indicate to the receiver that it needs to send	
- 	MPLS packets with that GRE encapsulation. However, a specific tunnel-	
- 	type for MPLS-in-GRE is being defined in order to make this indication
-	explicit to a receiver.
-    
-       </artwork>
+ 	MPLS packets with that GRE encapsulation. However, a specific 
+	tunnel-type for MPLS-in-GRE is being defined in order to make 
+	this indication explicit to a receiver.
+    </artwork>
    </figure>
      </t>
    </section>
@@ -492,8 +493,12 @@
 
     <section title="Securing Remote-Next-Hop">
 
-      <t>The Remote-Next-Hop attribute provides a set of tunnel parameters. 
-      </t>
+         <t>The Remote-Next-Hop attribute provides a set of tunnel parameters.
+		 While the Remote-Next-Hop attribute has as goal to inform an intended 
+		 recipient with these tunnel parameters, it is important to make sure 
+		 that the attributes have not been tampered with and that they are 
+		 restricted to the intended scope of distribution for secure operation. 
+		 </t>
 
      <section title="Restrictions on Announcing of Remote-Next-Hop Attribute">
 
