@@ -113,7 +113,7 @@
     <abstract>
 
       <t>The BGP Remote-Next-Hop attribute is an optional transitive attribute intended
-        to facilitate automatic tunneling across an AS for an NLRI in a given address 
+        to facilitate automatic tunnelling across an AS for an NLRI in a given address 
         family.  The attribute carries one or more tunnel end-points and 
         associated tunnel encapsulation information for a NLRI.  
        </t>
@@ -535,7 +535,7 @@
           Origin Validation.
         </t>
 
-        <t>(2) BGP Remote-Next-Hop Tunnel Endpoints underlay routes origin AS MUST 
+        <t>(2) BGP Remote-Next-Hop Tunnel Endpoints underlay routes origin AS SHOULD 
           be same as the AS number carried within BGP Remote-Next-Hop attribute.
         </t>
 
@@ -679,30 +679,7 @@
 
     </section>
 
-    <section title="BGP Remote-Next-Hop Community">
-
-       <t>This document defines a new BGP Extended Community 
-          called "BGP Remote-Next-Hop Extended Community".
-       </t>
-     
-       <t>The BGP Remote-Next-Hop extended community is transitive 
-	  across AS boundaries [RFC4360]
-       </t>
-	
-       <t>The Global Administrator field of this Community MUST be 
-          set to the ASN of the PE originating this community. 
-          The Local Administrator field of this Community MUST 
-	  be set to 0.
-        </t>
-	 
-	 <t>The Remote-Next-Hop extended community SHOULD be 
-	   attached to those BGP routes which are used to resolve 
-	   the Tunnel endpoints carried in BGP Remote-Next-Hop attribute.
-	 </t>
-
-    </section>
-
-  <section anchor="IANA" title="IANA Considerations">
+    <section anchor="IANA" title="IANA Considerations">
 
       <t>This document defines a new BGP attribute known as a BGP Remote-Next-
         Hop attribute.  We request IANA to allocate a new attribute code from
