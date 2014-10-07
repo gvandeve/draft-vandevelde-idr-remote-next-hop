@@ -737,6 +737,9 @@
       usefull vEPC discussions. Istvan Kakonyi provided insight in the vPE use case scenario.</t>
 
       <t>Satoshi Usui provided datapoints around Simple VPN solution using Multi-point Security Association.</t>
+	  
+	  <t>Thomas Morin, Ali Sajassi, Eric Rosen, Bruno Decraene, Jeffrey Haas and Yakov Rehkter are 
+	  thanked for their excellent draft review and feedback.</t>
     </section>
 
     <section anchor="log" title="Change Log">
@@ -745,6 +748,7 @@
 	  <t hangText="Hacked for -01:">17 July 2012</t>
 	  <t hangText="Hacked for -05:">07 January 2014</t>
 	  <t hangText="Hacked for -07:">15 September 2014</t>
+	  <t hangText="Hacked for -07:">7 October 2014</t>
         </list></t>
     </section>
 
