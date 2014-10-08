@@ -260,10 +260,10 @@
    This document defines the following types:
    - VXLAN: Tunnel Type = 8
    - NVGRE: Tunnel Type = 9
-   - GTP: Tunnel Type = 10
    - MPLS-in-GRE: Tunnel Type = 11
-   - MPLS-in-UDP: Tunnel Type = 12
-   - MPLS-in-UDP-with-DTLS: Tunnel Type = 13
+   - MPLS-in-UDP: Tunnel Type = 13
+   - MPLS-in-UDP-with-DTLS: Tunnel Type = 14
+   - GTP: Tunnel Type = 15
 
    Unknown types MUST be ignored and skipped upon receipt.
 
