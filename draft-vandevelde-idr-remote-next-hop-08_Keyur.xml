@@ -22,7 +22,7 @@
 <?rfc tocindent="yes"?>
 <?rfc tocompact="yes"?>
 
-<rfc category="std" docName="draft-vandevelde-idr-remote-next-hop-08"
+<rfc category="std" docName="draft-vandevelde-idr-remote-next-hop-09"
      ipr="trust200902">
 
   <front>
@@ -260,23 +260,23 @@
    This document defines the following types:
    - VXLAN: Tunnel Type = 8
    - NVGRE: Tunnel Type = 9
+   - GTP: Tunnel Type = 10
    - MPLS-in-GRE: Tunnel Type = 11
-   - MPLS-in-UDP: Tunnel Type = 13
-   - MPLS-in-UDP-with-DTLS: Tunnel Type = 14
-   - GTP: Tunnel Type = 15
+   - MPLS-in-UDP: Tunnel Type = 12
+   - MPLS-in-UDP-with-DTLS: Tunnel Type = 13
 
    Unknown types MUST be ignored and skipped upon receipt.
 
    Length (2 octets): the total number of octets of the value field.
 
-   Tunnel Address Length - Addr len (1 octet): Length of Tunnel 
+   Tunnel Address Length (1 octet): Length of Tunnel 
    Address. Set to 4 bytes for an IPv4 address and 16 bytes for an
    IPv6 address.
 
-   AS Number - The AS number originating the BGP Remote-Next-Hop 
+   AS Number (4 octets): The AS number originating the BGP Remote-Next-Hop 
    attribute and is either a 2-byte AS or 4-Byte AS number
 
-   Tunnel Parameter - (variable): comprised of multiple sub-TLVs.  
+   Tunnel Parameter (variable): comprised of multiple sub-TLVs.  
    Each sub-TLV consists of three fields: a 1-octet type, 1-octet 
    length, and zero or more octets of value.
       </artwork>
@@ -325,14 +325,14 @@
     further use. They MUST be set to 0 on transmit and MUST be ignored 
     on receipt.
 
-    VN-ID: Contains a 24-bit VN-ID value, if the 'V' flag bit is set.
+    VN-ID: Contains a 3 octets VN-ID value, if the 'V' flag bit is set.
     If the 'V' flag is not set, it SHOULD be set to zero and MUST be 
     ignored on receipt.
 
     The VN-ID value is filled in the VNI field in the VXLAN packet 
     header as defined in [VXLAN].
 
-    MAC Address: Contains an Ethernet MAC address if the 'M' flag bit 
+    MAC Address: Contains a 6 octets of an Ethernet MAC address if the 'M' flag bit 
     is set. If the 'M' flag is not set, it SHOULD set to all zeroes and 
     MUST be ignored on receipt.
 
@@ -375,14 +375,14 @@
     further use. They MUST be set to 0 on transmit and MUST be ignored 
     on receipt.
 
-    VN-ID: Contains a 24-bit VN-ID value, if the 'V' flag bit is set.
+    VN-ID: Contains a 3 octets VN-ID value, if the 'V' flag bit is set.
     If the 'V' flag is not set, it SHOULD be set to zero and MUST be 
     ignored on receipt.
 
     The VN-ID value is filled in the VSID field in the NVGRE packet 
     header as defined in [NVGRE].
 
-    MAC Address: Contains an Ethernet MAC address if the 'M' flag bit is 
+    MAC Address: Contains a 6 octets of an Ethernet MAC address if the 'M' flag bit is 
     set. If the 'M' flag is not set, it SHOULD set to all zeroes and 
     MUST be ignored on receipt.
 
@@ -477,16 +477,16 @@
     <section title="Remote-Next-Hop Bestpath Considerations">
 
       <t>Traditionally a BGP speaker uses the IGP cost towards the BGP Next-
-	     Hop as a BGP path selection criteria.  However, when a BGP speaker is
-	     configured to use the BGP Remote-Next-Hop value, then it SHOULD use
-		 the IGP cost towards the IP address selected from the Remote-Next-Hop
-		 attribute. When there are multiple such IP addresses that may be
-		 installed, it SHOULD use the worst IGP cost among them.
-	  </t>
+	Hop as a BGP path selection criteria.  However, when a BGP speaker is
+	configured to use the BGP Remote-Next-Hop value, then it SHOULD use
+	the IGP cost towards the IP address selected from the Remote-Next-Hop
+	attribute. When there are multiple such IP addresses that may be
+	installed, it SHOULD use the worst IGP cost among them.
+      </t>
 		 
-	   <t>Similarly, the speaker SHOULD also check that the IP
-		 address is reachable before considering that path eligible for
-		 bestpath.
+      <t>Similarly, the speaker SHOULD also check that the IP
+	address is reachable before considering that path eligible for
+	bestpath.
       </t>
 
    </section>
@@ -528,7 +528,7 @@
 
       <t>A BGP Remote-Next-Hop attribute may be added to routes that belong to 
         same Autonomous system as the tunnel endpoint address. Implementations 
-        should validate the following to ensure the validity of Remote-Next-Hop Attribute:
+        SHOULD validate the following to ensure the validity of Remote-Next-Hop Attribute:
       </t>
 
         <t>(1) BGP Remote-Next-Hops Tunnel Endpoint and AS number association using BGP
@@ -540,17 +540,21 @@
         </t>
 
         <t>(3) The origin AS of BGP Routes that carry BGP Remote-Next-Hop
-		attribute MUST be same as the AS number carried within BGP 
-		Remote-Next-Hop attribute.
-		</t>
+	  attribute MUST be same as the AS number carried within BGP 
+	  Remote-Next-Hop attribute.
+	</t>
 		
-		<t>(4) A BGP speaker that advertises its received routes to peers with its local
-		  address as the BGP next-hop may add the Remote-Next-Hop attribute to
-		  the routes if it desires to signal a tunnel encapsulation for its
-		  peers to use while sending traffic to the speaker for those routes.
-		</t>
+	<t>(4) A BGP speaker that advertises its received routes to peers with its local
+	  address as the BGP next-hop may add the Remote-Next-Hop attribute to
+	  the routes if it desires to signal a tunnel encapsulation for its
+	  peers to use while sending traffic to the speaker for those routes.
+	</t>
 
-
+	<t>
+	  If the above validation fails, the tunnel type SHOULD be considered as invalid. 
+	  This does not affect the validity of the others tunnels types carried within the 
+	  Remote-Next-Hop Attribute."
+	</t>
    </section>
    </section>
 
@@ -577,7 +581,8 @@
       <t>When receiving a BGP Update message containing a malformed Remote-Next-Hop 
         attribute, the attribute MUST be quietly ignored and not passed along to 
         other BGP peers. (see [draft-ietf-idr-error-handling], Section 7).  This is equivalent to the 
-        -attribute discard- action specified in [draft-ietf-idr-error-handling].
+        -attribute discard- action specified in [draft-ietf-idr-error-handling]. An
+	implementation MAY log an error for further analysis.
       </t>
 
       <t>Note that a BGP Remote-Next-Hop attribute MUST NOT be considered to 
@@ -595,10 +600,10 @@
 
     <section title="BGP speakers that do not support BGP Remote-Next-Hop attribute">
 
-      <t>If a device does not support this attribute, and receives this
-	    attribute, then it follows the normal NLRI processing and BGP best
-		path selection, and the resulting forwarding decision is used, as the
-		attribute is optional.
+      <t>If a BGP Speaker does not support this attribute, and receives this
+	attribute, then it follows the normal NLRI processing and BGP best
+	path selection, and the resulting forwarding decision is used, as the
+	attribute is optional.
       </t>
 
    </section>
@@ -737,9 +742,6 @@
       usefull vEPC discussions. Istvan Kakonyi provided insight in the vPE use case scenario.</t>
 
       <t>Satoshi Usui provided datapoints around Simple VPN solution using Multi-point Security Association.</t>
-	  
-	  <t>Thomas Morin, Ali Sajassi, Eric Rosen, Bruno Decraene, Jeffrey Haas and Yakov Rehkter are 
-	  thanked for their excellent draft review and feedback.</t>
     </section>
 
     <section anchor="log" title="Change Log">
@@ -748,7 +750,6 @@
 	  <t hangText="Hacked for -01:">17 July 2012</t>
 	  <t hangText="Hacked for -05:">07 January 2014</t>
 	  <t hangText="Hacked for -07:">15 September 2014</t>
-	  <t hangText="Hacked for -08:">7 October 2014</t>
         </list></t>
     </section>
 
